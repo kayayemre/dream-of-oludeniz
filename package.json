@@ -1,0 +1,8 @@
+{
+  "name": "dream-of-oludeniz",
+  "version": "1.0.0",
+  "description": "Hotel pricing system",
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  }
+}

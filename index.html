@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Otel Fiyat Hesaplama Sistemi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            padding: 40px;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .form-section h2 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #34495e;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .children-section {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border: 1px solid #ffeaa7;
+            display: none;
+        }
+
+        .child-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .child-input label {
+            min-width: 80px;
+            margin-bottom: 0;
+        }
+
+        .child-input input {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .calculate-btn {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s;
+            width: 100%;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .results-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .results-section h2 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+        }
+
+        .price-option {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .price-option:hover {
+            border-color: #3498db;
+            transform: translateY(-2px);
+        }
+
+        .price-option.best {
+            border-color: #27ae60;
+            background: linear-gradient(135deg, #d5f4e6 0%, #feffff 100%);
+        }
+
+        .price-option.best::before {
+            content: "🏆 EN EKONOMİK";
+            display: inline-block;
+            background: #27ae60;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .price-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .price-total {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #e74c3c;
+        }
+
+        .room-details {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .room-details h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .room-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .loading::after {
+            content: "⏳";
+            font-size: 2em;
+            display: block;
+            margin-top: 10px;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ffcdd2;
+            margin-bottom: 15px;
+        }
+
+        .api-section {
+            background: #263238;
+            color: white;
+            padding: 30px;
+            margin-top: 40px;
+            border-radius: 15px;
+        }
+
+        .api-section h2 {
+            color: #64b5f6;
+            margin-bottom: 20px;
+        }
+
+        .api-endpoint {
+            background: #37474f;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+
+        .api-method {
+            color: #4caf50;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .price-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏨 Otel Fiyat Hesaplama Sistemi</h1>
+            <p>Tarih ve misafir bilgilerinizi girin, optimal fiyatları görün</p>
+        </div>
+
+        <div class="content">
+            <div class="form-section">
+                <h2>📅 Rezervasyon Bilgileri</h2>
+                
+                <div class="form-group">
+                    <label for="checkin">Giriş Tarihi:</label>
+                    <input type="date" id="checkin" required style="cursor: pointer;">
+                </div>
+                
+                <div class="form-group">
+                    <label for="checkout">Çıkış Tarihi:</label>
+                    <input type="date" id="checkout" required style="cursor: pointer;">
+                </div>
+                
+                <div class="form-group">
+                    <label for="adults">Yetişkin Sayısı:</label>
+                    <select id="adults" required>
+                        <option value="1">1 Yetişkin</option>
+                        <option value="2" selected>2 Yetişkin</option>
+                        <option value="3">3 Yetişkin</option>
+                        <option value="4">4 Yetişkin</option>
+                        <option value="5">5 Yetişkin</option>
+                        <option value="6">6 Yetişkin</option>
+                        <option value="7">7 Yetişkin</option>
+                        <option value="8">8 Yetişkin</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="children">Çocuk Sayısı:</label>
+                    <select id="children" onchange="updateChildrenAges()">
+                        <option value="0" selected>Çocuk Yok</option>
+                        <option value="1">1 Çocuk</option>
+                        <option value="2">2 Çocuk</option>
+                        <option value="3">3 Çocuk</option>
+                        <option value="4">4 Çocuk</option>
+                        <option value="5">5 Çocuk</option>
+                    </select>
+                </div>
+                
+                <div id="children-ages" class="children-section">
+                    <h4>Çocukların Yaşları:</h4>
+                    <div id="children-inputs"></div>
+                </div>
+                
+                <button class="calculate-btn" onclick="calculatePrices()">
+                    💰 Fiyatları Hesapla
+                </button>
+            </div>
+
+            <div class="results-section">
+                <h2>💡 Fiyat Seçenekleri</h2>
+                <div id="results">
+                    <p style="text-align: center; color: #7f8c8d; padding: 40px;">
+                        Lütfen rezervasyon bilgilerinizi girin ve "Fiyatları Hesapla" butonuna tıklayın.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h2>🔌 API Endpoint</h2>
+            <p style="margin-bottom: 15px;">Bu sistemi API olarak kullanmak için:</p>
+            
+            <div class="api-endpoint">
+                <span class="api-method">POST</span> /api/calculate-price
+            </div>
+            
+            <p style="margin-bottom: 10px; color: #90a4ae;">Örnek Request:</p>
+            <div class="api-endpoint">
+{
+  "checkin": "2025-07-04",
+  "checkout": "2025-07-07",
+  "adults": 5,
+  "children": 2,
+  "childAges": [10, 9]
+}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Otel fiyat verileri (Excel'den alınan gerçek çarpan tabloları - SADECE EXCEL'DEKİLER)
+        const hotelData = {
+            standardMultipliers: [
+                {adults: 1, children: 0, childAges: [], multiplier: 1.5},
+                {adults: 1, children: 1, childAges: [[0, 11.99]], multiplier: 1.5},
+                {adults: 1, children: 2, childAges: [[0, 11.99], [0, 2.99]], multiplier: 1.5},
+                {adults: 1, children: 2, childAges: [[0, 11.99], [3, 11.99]], multiplier: 2},
+                {adults: 2, children: 0, childAges: [], multiplier: 2},
+                {adults: 2, children: 1, childAges: [[0, 11.99]], multiplier: 2},
+                {adults: 2, children: 2, childAges: [[0, 11.99], [0, 2.99]], multiplier: 2},
+                {adults: 2, children: 2, childAges: [[0, 11.99], [3, 11.99]], multiplier: 2.75},
+                {adults: 3, children: 0, childAges: [], multiplier: 2.75},
+                {adults: 3, children: 1, childAges: [[0, 11.99]], multiplier: 2.75}
+            ],
+            familyMultipliers: [
+                {adults: 2, children: 2, childAges: [[0, 11.99], [0, 11.99]], multiplier: 3},
+                {adults: 3, children: 0, childAges: [], multiplier: 3},
+                {adults: 3, children: 1, childAges: [[0, 11.99]], multiplier: 3},
+                {adults: 3, children: 2, childAges: [[0, 11.99], [0, 2.99]], multiplier: 3},
+                {adults: 3, children: 2, childAges: [[0, 11.99], [3, 11.99]], multiplier: 3.7},
+                {adults: 2, children: 3, childAges: [[0, 11.99], [0, 11.99], [0, 11.99]], multiplier: 3.7},
+                {adults: 4, children: 0, childAges: [], multiplier: 4},
+                {adults: 4, children: 1, childAges: [[0, 11.99]], multiplier: 4},
+                {adults: 4, children: 2, childAges: [[0, 11.99], [0, 2.99]], multiplier: 4},
+                {adults: 5, children: 0, childAges: [], multiplier: 4.75}
+            ]
+        };
+
+        // Çocuk yaş girişlerini güncelleme fonksiyonu
+        function updateChildrenAges() {
+            const childrenCount = parseInt(document.getElementById('children').value);
+            const childrenSection = document.getElementById('children-ages');
+            const childrenInputs = document.getElementById('children-inputs');
+            
+            if (childrenCount > 0) {
+                childrenSection.style.display = 'block';
+                childrenInputs.innerHTML = '';
+                
+                for (let i = 0; i < childrenCount; i++) {
+                    const childDiv = document.createElement('div');
+                    childDiv.className = 'child-input';
+                    childDiv.innerHTML = `
+                        <label>${i + 1}. Çocuk Yaşı:</label>
+                        <select id="child-${i}" required>
+                            <option value="">Yaş Seçin</option>
+                            <option value="0">0 yaş (bebek)</option>
+                            <option value="1">1 yaş</option>
+                            <option value="2">2 yaş</option>
+                            <option value="3">3 yaş</option>
+                            <option value="4">4 yaş</option>
+                            <option value="5">5 yaş</option>
+                            <option value="6">6 yaş</option>
+                            <option value="7">7 yaş</option>
+                            <option value="8">8 yaş</option>
+                            <option value="9">9 yaş</option>
+                            <option value="10">10 yaş</option>
+                            <option value="11">11 yaş</option>
+                            <option value="12">12 yaş (yetişkin fiyatı)</option>
+                            <option value="13">13 yaş (yetişkin fiyatı)</option>
+                            <option value="14">14 yaş (yetişkin fiyatı)</option>
+                            <option value="15">15 yaş (yetişkin fiyatı)</option>
+                            <option value="16">16 yaş (yetişkin fiyatı)</option>
+                            <option value="17">17 yaş (yetişkin fiyatı)</option>
+                        </select>
+                    `;
+                    childrenInputs.appendChild(childDiv);
+                }
+            } else {
+                childrenSection.style.display = 'none';
+            }
+        }
+
+        // Çarpan bulma fonksiyonu (yaş aralıklarını da kontrol eder)
+        function findMultiplier(roomType, adults, children, childAges = []) {
+            const multipliers = roomType === 'Standart Oda' ? 
+                hotelData.standardMultipliers : hotelData.familyMultipliers;
+            
+            // 12+ yaş çocukları yetişkin olarak say
+            let actualChildren = 0;
+            let actualAdults = adults;
+            const actualChildAges = [];
+            
+            for (let age of childAges) {
+                if (age >= 12) {
+                    actualAdults++;
+                } else {
+                    actualChildren++;
+                    actualChildAges.push(age);
+                }
+            }
+            
+            // Önce yetişkin ve çocuk sayısına göre filtrele
+            const candidates = multipliers.filter(m => 
+                m.adults === actualAdults && m.children === actualChildren
+            );
+            
+            if (candidates.length === 0) {
+                return null;
+            }
+            
+            // Eğer çocuk yoksa ilk eşleşeni döndür
+            if (actualChildren === 0) {
+                return candidates[0].multiplier;
+            }
+            
+            // Çocuk yaş aralıklarını kontrol et
+            for (let candidate of candidates) {
+                if (candidate.childAges.length === 0) {
+                    // Yaş aralığı belirtilmemişse genel kural
+                    return candidate.multiplier;
+                }
+                
+                // Her çocuğun yaşının uygun aralıkta olup olmadığını kontrol et
+                let isMatch = true;
+                for (let i = 0; i < actualChildren && i < candidate.childAges.length; i++) {
+                    const childAge = actualChildAges[i] || 0;
+                    const ageRange = candidate.childAges[i];
+                    
+                    if (ageRange && ageRange.length === 2) {
+                        const [minAge, maxAge] = ageRange;
+                        if (childAge < minAge || childAge > maxAge) {
+                            isMatch = false;
+                            break;
+                        }
+                    }
+                }
+                
+                if (isMatch) {
+                    return candidate.multiplier;
+                }
+            }
+            
+            // En basit eşleşmeyi döndür (yaş kontrolü olmayan)
+            const basicMatch = candidates.find(c => c.childAges.length === 0);
+            return basicMatch ? basicMatch.multiplier : candidates[0].multiplier;
+        }
+
+        // Oda kombinasyonları üretme (çocuk yaşlarını da dağıt)
+        function generateRoomCombinations(totalAdults, totalChildren, childAges) {
+            const combinations = [];
+            
+            // 1 oda
+            combinations.push([{
+                adults: totalAdults, 
+                children: totalChildren,
+                childAges: childAges
+            }]);
+            
+            // 2 oda kombinasyonları
+            for (let adults1 = 1; adults1 <= totalAdults - 1; adults1++) {
+                const adults2 = totalAdults - adults1;
+                for (let children1 = 0; children1 <= totalChildren; children1++) {
+                    const children2 = totalChildren - children1;
+                    
+                    // Çocuk yaşlarını dağıt
+                    const childAges1 = childAges.slice(0, children1);
+                    const childAges2 = childAges.slice(children1);
+                    
+                    combinations.push([
+                        {adults: adults1, children: children1, childAges: childAges1},
+                        {adults: adults2, children: children2, childAges: childAges2}
+                    ]);
+                }
+            }
+            
+            return combinations;
+        }
+
+        // Hata gösterme fonksiyonu
+        function showError(message) {
+            const results = document.getElementById('results');
+            results.innerHTML = `<div class="error">${message}</div>`;
+        }
+
+        // Ana fiyat hesaplama fonksiyonu
+        function calculatePrices() {
+            const checkin = document.getElementById('checkin').value;
+            const checkout = document.getElementById('checkout').value;
+            const adults = parseInt(document.getElementById('adults').value);
+            const children = parseInt(document.getElementById('children').value);
+            
+            if (!checkin || !checkout) {
+                showError('Lütfen giriş ve çıkış tarihlerini seçin.');
+                return;
+            }
+            
+            const checkinDate = new Date(checkin);
+            const checkoutDate = new Date(checkout);
+            const nights = Math.ceil((checkoutDate - checkinDate) / (1000 * 60 * 60 * 24));
+            
+            if (nights <= 0) {
+                showError('Çıkış tarihi giriş tarihinden sonra olmalıdır.');
+                return;
+            }
+
+            // Loading göster
+            const results = document.getElementById('results');
+            results.innerHTML = '<div class="loading">Fiyatlar hesaplanıyor...</div>';
+
+            // Çocuk yaşlarını al
+            const childAges = [];
+            for (let i = 0; i < children; i++) {
+                const ageSelect = document.getElementById(`child-${i}`);
+                if (ageSelect && ageSelect.value !== '') {
+                    childAges.push(parseInt(ageSelect.value));
+                } else if (children > 0) {
+                    showError('Lütfen tüm çocukların yaşlarını seçin.');
+                    return;
+                }
+            }
+
+            // Hesaplama yap
+            setTimeout(() => {
+                const priceOptions = calculateOptimalPrices(adults, children, childAges, nights);
+                displayResults(priceOptions);
+            }, 800);
+        }
+
+        // Optimal fiyat hesaplama
+        function calculateOptimalPrices(totalAdults, totalChildren, childAges, nights) {
+            const results = [];
+            const roomTypes = ['Standart Oda', 'Ara Kapılı Aile Odası'];
+            const basePrice = 4160; // Excel'den alınan sabit fiyat
+
+            for (let roomType of roomTypes) {
+                // Tek oda ile çözüm dene
+                const singleMultiplier = findMultiplier(roomType, totalAdults, totalChildren, childAges);
+                if (singleMultiplier) {
+                    results.push({
+                        solution: 'Tek Oda',
+                        roomType: roomType,
+                        rooms: [{
+                            adults: totalAdults,
+                            children: totalChildren,
+                            childAges: childAges,
+                            multiplier: singleMultiplier,
+                            price: basePrice * singleMultiplier * nights
+                        }],
+                        totalPrice: basePrice * singleMultiplier * nights
+                    });
+                }
+
+                // Çoklu oda kombinasyonları
+                const combinations = generateRoomCombinations(totalAdults, totalChildren, childAges);
+                
+                for (let combo of combinations.slice(1)) { // İlk kombinasyon tek oda zaten
+                    let totalPrice = 0;
+                    const roomPrices = [];
+                    let isValid = true;
+
+                    for (let room of combo) {
+                        const multiplier = findMultiplier(roomType, room.adults, room.children, room.childAges || []);
+                        if (!multiplier) {
+                            isValid = false;
+                            break;
+                        }
+                        const roomPrice = basePrice * multiplier * nights;
+                        roomPrices.push({
+                            adults: room.adults,
+                            children: room.children,
+                            childAges: room.childAges || [],
+                            multiplier: multiplier,
+                            price: roomPrice
+                        });
+                        totalPrice += roomPrice;
+                    }
+
+                    if (isValid) {
+                        results.push({
+                            solution: `${combo.length} Oda`,
+                            roomType: roomType,
+                            rooms: roomPrices,
+                            totalPrice: totalPrice
+                        });
+                    }
+                }
+            }
+
+            // En ekonomik seçeneği bul ve sırala
+            results.sort((a, b) => a.totalPrice - b.totalPrice);
+            return results.slice(0, 8); // En iyi 8 seçeneği göster
+        }
+
+        // Sonuçları gösterme fonksiyonu
+        function displayResults(priceOptions) {
+            const results = document.getElementById('results');
+            
+            if (priceOptions.length === 0) {
+                results.innerHTML = '<div class="error">Bu kombinasyon için uygun fiyat bulunamadı. Lütfen farklı seçenekler deneyin.</div>';
+                return;
+            }
+
+            // Özet bilgileri hazırla
+            const checkin = document.getElementById('checkin').value;
+            const checkout = document.getElementById('checkout').value;
+            const adults = parseInt(document.getElementById('adults').value);
+            const children = parseInt(document.getElementById('children').value);
+            
+            const checkinDate = new Date(checkin);
+            const checkoutDate = new Date(checkout);
+            const nights = Math.ceil((checkoutDate - checkinDate) / (1000 * 60 * 60 * 24));
+            
+            // Tarih formatları
+            const checkinFormatted = checkinDate.toLocaleDateString('tr-TR', { 
+                day: 'numeric', 
+                month: 'long', 
+                weekday: 'long' 
+            });
+            const checkoutFormatted = checkoutDate.toLocaleDateString('tr-TR', { 
+                day: 'numeric', 
+                month: 'long', 
+                weekday: 'long' 
+            });
+
+            // Çocuk yaşları bilgisi
+            let childAgesText = '';
+            if (children > 0) {
+                const childAges = [];
+                for (let i = 0; i < children; i++) {
+                    const ageSelect = document.getElementById(`child-${i}`);
+                    if (ageSelect && ageSelect.value !== '') {
+                        childAges.push(parseInt(ageSelect.value));
+                    }
+                }
+                if (childAges.length > 0) {
+                    childAgesText = ` (${childAges.join(', ')} yaş)`;
+                }
+            }
+
+            let html = `
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                    <h3 style="margin: 0 0 15px 0; font-size: 1.3em;">📊 Rezervasyon Özeti</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 0.95em;">
+                        <div>
+                            <strong>Giriş:</strong> ${checkinFormatted}<br>
+                            <strong>Çıkış:</strong> ${checkoutFormatted}<br>
+                            <strong>Konaklama:</strong> ${nights} Gece ${nights + 1} Gün
+                        </div>
+                        <div>
+                            <strong>Misafirler:</strong> ${adults} Yetişkin${children > 0 ? ` ${children} Çocuk${childAgesText}` : ''}<br>
+                            <strong>Konsept:</strong> Alkollü Herşey Dahil<br>
+                            <strong>Seçenek Sayısı:</strong> ${priceOptions.length} Farklı Kombinasyon
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            priceOptions.forEach((option, index) => {
+                const isBest = index === 0;
+                html += `
+                    <div class="price-option ${isBest ? 'best' : ''}">
+                        <div class="price-header">
+                            <div>
+                                <h3>${option.solution} - ${option.roomType}</h3>
+                                <p style="color: #7f8c8d; margin-top: 5px;">
+                                    ${checkinDate.getDate()} ${checkinDate.toLocaleDateString('tr-TR', { month: 'long' })} - ${checkoutDate.getDate()} ${checkoutDate.toLocaleDateString('tr-TR', { month: 'long' })} • ${nights} Gece ${nights + 1} Gün • Alkollü Herşey Dahil
+                                </p>
+                            </div>
+                            <div class="price-total">${option.totalPrice.toLocaleString('tr-TR')}₺</div>
+                        </div>
+                        
+                        ${option.rooms.map((room, roomIndex) => `
+                            <div class="room-details">
+                                <h4>Oda ${roomIndex + 1}</h4>
+                                <div class="room-info">
+                                    <span>${room.adults} Yetişkin${room.children > 0 ? ` + ${room.children} Çocuk` : ''}${room.childAges && room.childAges.length > 0 ? ` (${room.childAges.join(', ')} yaş)` : ''}</span>
+                                    <span>Çarpan: ${room.multiplier}</span>
+                                </div>
+                                <div class="room-info">
+                                    <span>Konsept: Alkollü Herşey Dahil</span>
+                                    <span style="font-weight: 600;">${room.price.toLocaleString('tr-TR')}₺</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            });
+
+            results.innerHTML = html;
+        }
+
+        // Sayfa yüklendiğinde bugünün tarihini ayarla
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            document.getElementById('checkin').value = today.toISOString().split('T')[0];
+            document.getElementById('checkout').value = tomorrow.toISOString().split('T')[0];
+        });
+    </script>
+</body>
+</html>

@@ -109,12 +109,20 @@ export default function handler(req, res) {
 
         // Fiyat hesaplama
         const priceCalculator = new PriceCalculator(standardMultipliers, familyMultipliers);
-        const priceOptions = priceCalculator.calculateOptimalPrices(
+        const allPriceOptions = priceCalculator.calculateOptimalPrices(
             parseInt(adults),
             parseInt(children) || 0,
             validChildAges.map(age => parseInt(age)),
             nights
         );
+
+        // 🎯 SADECE STANDART ODA + EN UCUZ SEÇENEK FİLTRESİ
+        const standardRoomOptions = allPriceOptions.filter(option => 
+            option.roomType === 'Standart Oda'
+        );
+
+        // En ucuz standart oda seçeneğini al (sadece 1 tane)
+        const priceOptions = standardRoomOptions.length > 0 ? [standardRoomOptions[0]] : [];
 
         // Her seçeneğe numaralı field'lar ekle
         const numberedPriceOptions = priceOptions.map((option, index) => {

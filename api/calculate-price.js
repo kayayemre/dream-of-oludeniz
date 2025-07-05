@@ -15,47 +15,91 @@ export default function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ 
             error: 'Method not allowed',
-            allowedMethods: ['POST']
+            allowedMethods: ['POST'],
+            documentation: 'https://dream-of-oludeniz.vercel.app/api/docs'
         });
     }
 
     try {
         const { checkin, checkout, adults, children, childAges } = req.body;
 
-        // Validasyon
+        // Temel validasyonlar
         if (!checkin || !checkout) {
             return res.status(400).json({
-                error: 'Giriş ve çıkış tarihleri gerekli',
-                code: 'MISSING_DATES'
+                error: 'Giriş ve çıkış tarihleri gerekli (YYYY-MM-DD formatında)',
+                code: 'MISSING_DATES',
+                example: {
+                    checkin: "2025-08-01",
+                    checkout: "2025-08-06"
+                }
             });
         }
 
         if (!adults || adults < 1) {
             return res.status(400).json({
                 error: 'En az 1 yetişkin gerekli',
-                code: 'INVALID_ADULTS'
+                code: 'INVALID_ADULTS',
+                received: adults
             });
         }
 
-        // Tarih hesaplama
+        // Tarih format kontrolü
         const checkinDate = new Date(checkin);
         const checkoutDate = new Date(checkout);
+        
+        if (isNaN(checkinDate.getTime()) || isNaN(checkoutDate.getTime())) {
+            return res.status(400).json({
+                error: 'Geçersiz tarih formatı. YYYY-MM-DD formatında olmalı',
+                code: 'INVALID_DATE_FORMAT',
+                received: { checkin, checkout },
+                example: {
+                    checkin: "2025-08-01",
+                    checkout: "2025-08-06"
+                }
+            });
+        }
+
         const nights = Math.ceil((checkoutDate - checkinDate) / (1000 * 60 * 60 * 24));
 
         if (nights <= 0) {
             return res.status(400).json({
                 error: 'Çıkış tarihi giriş tarihinden sonra olmalıdır',
-                code: 'INVALID_DATES'
+                code: 'INVALID_DATES',
+                received: { checkin, checkout, calculatedNights: nights }
             });
         }
 
-        // Çocuk yaşları validasyonu
+        // Çocuk yaşları validasyonu - DAHA NET
         const validChildAges = childAges || [];
-        if (children > 0 && validChildAges.length !== children) {
+        const childrenCount = parseInt(children) || 0;
+        
+        if (childrenCount > 0 && validChildAges.length !== childrenCount) {
             return res.status(400).json({
-                error: 'Tüm çocukların yaşları belirtilmelidir',
-                code: 'MISSING_CHILD_AGES'
+                error: `${childrenCount} çocuk için ${childrenCount} yaş bilgisi gerekli`,
+                code: 'MISSING_CHILD_AGES',
+                received: {
+                    children: childrenCount,
+                    childAges: validChildAges,
+                    childAgesCount: validChildAges.length
+                },
+                example: {
+                    children: 2,
+                    childAges: [8, 10]
+                }
             });
+        }
+
+        // Çocuk yaşları geçerlilik kontrolü
+        for (let i = 0; i < validChildAges.length; i++) {
+            const age = parseInt(validChildAges[i]);
+            if (isNaN(age) || age < 0 || age > 17) {
+                return res.status(400).json({
+                    error: `Çocuk yaşı 0-17 arasında olmalı`,
+                    code: 'INVALID_CHILD_AGE',
+                    received: validChildAges[i],
+                    position: i + 1
+                });
+            }
         }
 
         // Excel verilerini yükle

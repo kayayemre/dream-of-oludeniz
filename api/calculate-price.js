@@ -72,6 +72,39 @@ export default function handler(req, res) {
             nights
         );
 
+        // Her seçeneğe numaralı field'lar ekle
+        const numberedPriceOptions = priceOptions.map((option, index) => {
+            const solutionNum = index + 1;
+            
+            // Rooms array'ini numaralı field'larla güncelle
+            const numberedRooms = option.rooms.map((room, roomIndex) => {
+                const roomNum = roomIndex + 1;
+                return {
+                    [`adults${solutionNum}_${roomNum}`]: room.adults,
+                    [`children${solutionNum}_${roomNum}`]: room.children,
+                    [`childAges${solutionNum}_${roomNum}`]: room.childAges,
+                    [`multiplier${solutionNum}_${roomNum}`]: room.multiplier,
+                    [`price${solutionNum}_${roomNum}`]: room.price
+                };
+            });
+
+            return {
+                [`solution${solutionNum}`]: option.solution,
+                [`roomType${solutionNum}`]: option.roomType,
+                [`totalPrice${solutionNum}`]: option.totalPrice,
+                [`rank${solutionNum}`]: solutionNum,
+                [`isCheapest${solutionNum}`]: index === 0,
+                [`roomCount${solutionNum}`]: option.rooms.length,
+                
+                rooms: numberedRooms,
+                
+                // Original data (backward compatibility için)
+                solution: option.solution,
+                roomType: option.roomType,
+                totalPrice: option.totalPrice
+            };
+        });
+
         // Response
         res.json({
             success: true,
@@ -84,10 +117,21 @@ export default function handler(req, res) {
                     children: parseInt(children) || 0,
                     childAges: validChildAges.map(age => parseInt(age))
                 },
-                priceOptions,
+                
+                // Numaralı seçenekler
+                priceOptions: numberedPriceOptions,
+                
+                // Kolay erişim için en ucuz seçenek
+                recommended: numberedPriceOptions.length > 0 ? {
+                    [`solution1`]: numberedPriceOptions[0][`solution1`],
+                    [`roomType1`]: numberedPriceOptions[0][`roomType1`],
+                    [`totalPrice1`]: numberedPriceOptions[0][`totalPrice1`],
+                    [`roomCount1`]: numberedPriceOptions[0][`roomCount1`]
+                } : null,
+                
                 meta: {
-                    optionCount: priceOptions.length,
-                    cheapestPrice: priceOptions.length > 0 ? priceOptions[0].totalPrice : null,
+                    optionCount: numberedPriceOptions.length,
+                    cheapestPrice: numberedPriceOptions.length > 0 ? numberedPriceOptions[0][`totalPrice1`] : null,
                     concept: 'Alkollü Herşey Dahil',
                     currency: 'TRY'
                 }

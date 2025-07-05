@@ -107,13 +107,14 @@ export default function handler(req, res) {
         const standardMultipliers = excelReader.getStandardMultipliers();
         const familyMultipliers = excelReader.getFamilyMultipliers();
 
-        // Fiyat hesaplama
-        const priceCalculator = new PriceCalculator(standardMultipliers, familyMultipliers);
+        // Fiyat hesaplama - Excel reader'ı da geç
+        const priceCalculator = new PriceCalculator(standardMultipliers, familyMultipliers, excelReader);
         const allPriceOptions = priceCalculator.calculateOptimalPrices(
             parseInt(adults),
             parseInt(children) || 0,
             validChildAges.map(age => parseInt(age)),
-            nights
+            nights,
+            checkinDate // Tarih bilgisini de gönder
         );
 
         // 🎯 SADECE STANDART ODA + EN UCUZ SEÇENEK FİLTRESİ

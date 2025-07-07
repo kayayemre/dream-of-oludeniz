@@ -29,10 +29,10 @@ export default function handler(req, res) {
             version: '1.0.0',
             status: 'online',
             data: {
-                excelLoaded: standardMultipliers.length > 0 && familyMultipliers.length > 0,
-                standardMultipliersCount: standardMultipliers.length,
-                familyMultipliersCount: familyMultipliers.length
-            },
+    excelLoaded: standardMultipliers.length > 0, // Sadece standart odaya bak
+    standardMultipliersCount: standardMultipliers.length,
+    familyMultipliersCount: familyMultipliers.length
+},
             endpoints: [
                 'GET /api/status',
                 'POST /api/calculate-price'
